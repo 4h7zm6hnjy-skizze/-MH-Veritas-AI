@@ -1,4 +1,20 @@
-# MH Veritas AI – Version 0.2.1
+# Wichtiges Update 0.3.0 – Antwortqualität (19.11.2026)
+
+- **Kein ChatGPT-/Claude-Ersatz bei rein lokalem 0,5B-Modell.** Ein Gerät kann ein deutlich größeres lokales Modell möglicherweise nicht laden.
+- Neues Modul `quality.js`: einfache, konservative Anfragekontrolle, Wiederholungserkennung und Ausgabe-Begrenzung. Dies ist **keine inhaltliche automatische Wahrheitsprüfung**.
+- Erhöhte Wiederholungsstrafe, niedrigere Sampling-Temperatur, gekürzter Kontext und begrenzte Ausgabe. Die tatsächliche Modellwirkung muss am iPhone geprüft werden.
+- Antworten werden erst nach einfacher Textmusterprüfung gezeigt; keine ungeprüften Tokens während des Streamings.
+- Einige risikoreiche Fragen nach individueller Arzneidosierung, spezifischen rechtlichen Fristen oder tagesaktuellen Fakten werden ohne Quellen bewusst nicht beantwortet.
+- Ein eng begrenzter **Offline-Quellenauszug über Meinerzhagen** ist hinterlegt, inklusive Link auf die offizielle Stadtgeschichte. Quelle am 19.11.2026 geprüft: https://www.meinerzhagen.de/bildung/kultur-und-sport/stadtgeschichte. Dieser Quellenauszug ist kein aktueller Abruf und darf nicht auf andere Städte verallgemeinert werden.
+- Größere lokale Modelle können manuell aus der vorhandenen WebLLM-Modellliste ausgewählt werden; nicht automatisch installieren. Modelle brauchen oft mehr Arbeitsspeicher.
+- **Datenbestand bleibt unverändert:** Unveränderte Tresor-/Backup-Formate; vor Upload dennoch verschlüsseltes Backup exportieren.
+- Repository ist öffentlich: keine persönlichen Dokumente oder Schlüssel in GitHub-Dateien hochladen.
+- In dieser Version **keine** Cloud-KI, aktuelle Live-Recherche, Medikamenten-Datenbank oder garantierte Faktenprüfung.
+- Installation: Komplett-ZIP entpacken, alle Dateien flach ins GitHub-Repository (main/root) laden und vorhandene ersetzen; im App-Menü auf Updates prüfen.
+
+---
+
+# MH Veritas AI – Version 0.3.0
 
 **Entwicklungsstand, keine zertifizierte Medizin-/Rechtssoftware.**
 

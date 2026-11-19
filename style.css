@@ -93,3 +93,16 @@ button, a, label, select, textarea, input {
   .sidebar { z-index: 30; }
   .mobile-shade.on { z-index: 25; }
 }
+
+/* v0.3.0 – besser strukturierte, sicher gerenderte Kurzantworten */
+.msg-content {white-space:normal;line-height:1.65;}
+.msg-content p {margin:0 0 0.85em;}
+.msg-content p:last-child {margin-bottom:0;}
+.msg-content h3 {font-size:1em;margin:1.05em 0 0.5em;line-height:1.35;}
+.msg-content ul,.msg-content ol {margin:.4em 0 1em;padding-left:1.35em;}
+.msg-content li {margin:.28em 0;}
+.source-links {margin-top:10px;font-size:12px;}
+.source-links a {color:#98cdf5;text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere;}
+.quality-hint,.quality-explainer {border:1px solid #78664a;background:#3a302a77;color:#ead7b2;border-radius:12px;padding:12px 14px;font-size:12px;line-height:1.55;}
+.quality-explainer strong{display:block;font-size:13px;margin-bottom:8px;}
+.quality-explainer p{margin:.55em 0;}

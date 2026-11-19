@@ -1,8 +1,9 @@
 import {createVault,openVault,saveVault,vaultExists,exportVault,importVault,eraseVault} from './vault.js';
 import {systemPrompt,MODE_NAMES,emergencyNotice} from './rules.js';
+import {evidenceFirst,reviewGeneratedAnswer,smallModelWarning,simplePrompt} from './quality.js';
 import {extractDocument,asDataUrl} from './parsers.js';
 
-const APP_VERSION='0.2.1';
+const APP_VERSION='0.3.0';
 const $=id=>document.getElementById(id);
 const state={key:null,salt:null,data:null,view:'chat',previousView:'chat',updateReady:false,remoteVersion:null,swRegistration:null,mode:'chat',activeId:null,selectedDoc:null,engine:null,modelId:'',modelLibrary:null,busy:false,sidebar:false,tts:false,recognition:null};
 const els={sidebar:$('sidebar'),screen:$('vaultScreen'),form:$('vaultForm'),pass:$('vaultPassword'),confirm:$('vaultConfirm'),passArea:$('confirmPassArea'),error:$('vaultError'),desc:$('vaultDescription'),submit:$('vaultSubmit'),messages:$('chatMessages'),hero:$('chatHero'),history:$('historyList'),input:$('messageInput'),composer:$('composerWrap'),send:$('sendButton'),file:$('filePicker'),docList:$('documentList'),docCount:$('docCount'),model:$('modelSelect'),engineBadge:$('engineBadge'),progress:$('modelProgress'),progressBar:$('progressBar'),chip:$('contextChip'),toast:$('toast'),tts:$('ttsToggle'),modelStorage:$('modelStorageStatus'),updateStatus:$('updateStatus'),updateButton:$('installUpdate')};
@@ -40,8 +41,28 @@ function renderAll(){renderMessages();renderHistory();renderDocuments();updateMo
 function renderHistory(){els.history.replaceChildren();if(!state.data?.conversations.length){const no=document.createElement('div');no.className='muted-history';no.textContent='Noch keine Unterhaltungen';els.history.append(no);return;}for(const conv of [...state.data.conversations].sort((a,b)=>new Date(b.updated)-new Date(a.updated))){const btn=document.createElement('button');btn.classList.toggle('active',conv.id===state.activeId);btn.textContent=`◌  ${conv.title}`;btn.title=conv.title;btn.addEventListener('click',()=>{state.activeId=conv.id;state.mode=conv.mode||'chat';setView('chat');renderMessages();renderHistory();});els.history.append(btn);}}
 function createText(tag,text,cls){const el=document.createElement(tag);el.textContent=text;if(cls)el.className=cls;return el;}
 function renderMessages(){els.messages.replaceChildren();const conv=currentConversation();const hasMessages=!!conv?.messages.length;els.hero.style.display=hasMessages?'none':'';if(!hasMessages)return;for(const message of conv.messages)renderMessage(message);requestAnimationFrame(()=>{const root=document.querySelector('.main-content');root.scrollTop=root.scrollHeight;});}
-function renderMessage(m){const container=createText('article','',`message ${m.role==='user'?'user':'assistant'}`);const avatar=createText('div',m.role==='user'?'DU':'V','avatar');const body=createText('div','','msg-body');const content=createText('div',m.text||'', 'msg-content');body.append(content);
- const foot=createText('div','','msg-foot');foot.append(createText('span',m.role==='user'?'Deine Nachricht':m.docName?`KI · Datei: ${m.docName} (ungeprüft)`:'KI-Antwort · nicht unabhängig geprüft',m.role==='user'?'':'warning-label'));
+function renderSafeAnswer(container,text){
+ container.replaceChildren();
+ const lines=String(text||'').split(/\r?\n/);
+ const addInline=(node,line)=>{
+  const parts=line.split(/(\*\*[^*\n]+\*\*)/g);
+  for(const part of parts){if(part.startsWith('**')&&part.endsWith('**'))node.append(createText('strong',part.slice(2,-2)));
+   else node.append(document.createTextNode(part));}
+ };
+ // Rendert Markdown-Grundformatierung ohne HTML oder fremde Bibliothek.
+ let list=null,listKind='';
+ for(const line of lines){const trim=line.trim();
+  if(!trim){list=null;listKind='';continue;}
+  const heading=trim.match(/^#{1,3}\s+(.+)$/);
+  if(heading){list=null;listKind='';const h=createText('h3','');addInline(h,heading[1]);container.append(h);continue;}
+  const item=trim.match(/^([*-]|\d+[.)])\s+(.+)$/);
+  if(item){const kind=/\d/.test(item[1][0])?'ol':'ul';if(kind!==listKind||!list){list=document.createElement(kind);container.append(list);listKind=kind;}const li=createText('li','');addInline(li,item[2]);list.append(li);continue;}
+  list=null;listKind='';const p=createText('p','');addInline(p,trim);container.append(p);
+ }
+}
+function renderMessage(m){const container=createText('article','',`message ${m.role==='user'?'user':'assistant'}`);const avatar=createText('div',m.role==='user'?'DU':'V','avatar');const body=createText('div','','msg-body');const content=createText('div','', 'msg-content');renderSafeAnswer(content,m.text||'');body.append(content);
+ const foot=createText('div','','msg-foot');foot.append(createText('span',m.role==='user'?'Deine Nachricht':m.category==='quellenbasiert'?'Offizielle Quelle · gespeicherter Auszug':m.category==='verworfen'?'Automatische Wiederholungsprüfung: Antwort verworfen':m.docName?`KI · Datei: ${m.docName} (nicht unabhängig geprüft)`:'KI-Antwort · Fakten nicht unabhängig geprüft',m.role==='user'?'':'warning-label'));
+ if(m.sources?.length){const links=createText('div','','source-links');for(const s of m.sources){if(!s.url?.startsWith('https://'))continue;const a=createText('a',s.title+' ↗');a.href=s.url;a.target='_blank';a.rel='noopener noreferrer';links.append(a);}body.append(links);}
  if(m.role==='assistant'){const buttons=document.createElement('div');const copy=createText('button','Kopieren');copy.type='button';copy.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(m.text);toast('Text kopiert.');}catch{toast('Kopieren in diesem Browser nicht möglich.');}});buttons.append(copy);
  if('speechSynthesis'in window){const read=createText('button','Vorlesen');read.type='button';read.addEventListener('click',()=>speak(m.text));buttons.append(read);}foot.append(buttons);}
  body.append(foot);container.append(avatar,body);els.messages.append(container);return content;
@@ -50,7 +71,8 @@ function sendPrefill(prompt){state.mode=state.view==='medical'||state.view==='me
 function newChat(){state.activeId=null;state.mode='chat';state.selectedDoc=null;setView('chat');renderMessages();renderHistory();els.input.focus();}
 function updateStatus(text,good){els.engineBadge.className='status-badge '+(good?'good':'warning');els.engineBadge.innerHTML='';const dot=createText('span','','status-dot');els.engineBadge.append(dot,document.createTextNode(text));}
 function progress(message,number){els.progress.textContent=message;if(typeof number==='number'&&Number.isFinite(number))els.progressBar.style.width=`${Math.max(0,Math.min(100,number*100))}%`;}
-function updateModelSelect(){if(!state.modelLibrary){const saved=state.data?.settings?.model;if(saved){els.model.replaceChildren(new Option(saved+' (gespeichert)',saved));}return;}const previous=state.data?.settings?.model||els.model.value||'';els.model.replaceChildren();const small=[...state.modelLibrary].sort((a,b)=>sizeRank(a.model_id)-sizeRank(b.model_id));for(const entry of small){const opt=document.createElement('option');opt.value=entry.model_id;opt.textContent=entry.model_id;els.model.append(opt);}els.model.value=small.some(m=>m.model_id===previous)?previous:small[0]?.model_id||'';}
+function updateModelSelect(){if(!state.modelLibrary){const saved=state.data?.settings?.model;if(saved){els.model.replaceChildren(new Option(saved+' (gespeichert)',saved));}return;}const previous=state.data?.settings?.model||els.model.value||'';els.model.replaceChildren();const small=[...state.modelLibrary].sort((a,b)=>sizeRank(a.model_id)-sizeRank(b.model_id));for(const entry of small){const opt=document.createElement('option');opt.value=entry.model_id;opt.textContent=entry.model_id+(sizeRank(entry.model_id)<=0.6?' · Basisqualität':sizeRank(entry.model_id)<=1.6?' · bessere Qualität möglich':' · hoher Speicherbedarf');els.model.append(opt);}els.model.value=small.some(m=>m.model_id===previous)?previous:small[0]?.model_id||'';updateModelQuality();}
+function updateModelQuality(){const item=$('modelQualityNote');if(item)item.textContent=smallModelWarning(els.model.value||state.data?.settings?.model||'');}
 function sizeRank(name){const m=String(name).match(/(\d+(?:\.\d+)?)B/i);return m?parseFloat(m[1]):999;}
 async function loadLibrary(){
  if(state.webllm)return state.webllm;
@@ -109,7 +131,7 @@ async function loadModel({preferredId=null,automatic=false}={}){
   state.modelId=entry.model_id;
   state.data.settings.model=entry.model_id;
   await persist();updateModelSelect();
-  updateStatus('Lokale KI bereit',true);
+  updateStatus('Lokale KI aktiv · ungeprüft',true);updateModelQuality();
   progress('Das lokale Modell ist bereit. Die Auswahl wurde gespeichert.',1);
   toast(automatic?'Gespeichertes KI-Modell wiederhergestellt.':'KI-Modell geladen und Auswahl gespeichert.');
   void updateStorageStatus();
@@ -158,19 +180,45 @@ async function checkGPU(){if(!navigator.gpu){toast('WebGPU fehlt in diesem Brows
 function autoGrow(){els.input.style.height='auto';els.input.style.height=Math.min(150,els.input.scrollHeight)+'px';}
 function gatherMessages(conv){return conv.messages.slice(-14).filter(m=>m.role==='user'||m.role==='assistant').map(m=>({role:m.role,content:m.text.slice(0,5000)}));}
 async function send(){const question=els.input.value.trim();if(!question||state.busy)return;
- if(!state.engine){toast('Bitte zuerst unter Einstellungen ein lokales Modell laden.');setView('settings');return;}
- state.busy=true;els.send.disabled=true;const mode=state.mode;const conv=currentConversation(true);if(conv.messages.length===0){conv.mode=mode;conv.title=question.slice(0,55)+(question.length>55?'…':'');}
- const doc=state.selectedDoc?state.data.documents.find(d=>d.id===state.selectedDoc):null;const context=doc?.text?`Datei: ${doc.name}\n---\n${doc.text}`:'';
- const note=emergencyNotice(question);const msg={id:id(),role:'user',text:question,at:time()};conv.messages.push(msg);conv.updated=time();els.input.value='';autoGrow();state.selectedDoc=null;setView('chat');renderHistory();renderMessages();await persist();
- const reply={id:id(),role:'assistant',text:note?note+'\n\n':'',at:time(),docName:doc?.text?doc.name:null};conv.messages.push(reply);const output=renderMessage(reply);els.hero.style.display='none';
+ const mode=state.mode,conv=currentConversation(true);
+ if(!conv.messages.length){conv.mode=mode;conv.title=question.slice(0,55)+(question.length>55?'…':'');}
+ const doc=state.data.documents.find(d=>d.id===state.selectedDoc)||null;
+ const context=doc?.text?`Datei: ${doc.name}
+---
+${doc.text}`:'';
+ const note=emergencyNotice(question);
+ const safeResult=evidenceFirst(question,mode,!!doc?.text);
+ const msg={id:id(),role:'user',text:question,at:time()};
+ conv.messages.push(msg);conv.updated=time();els.input.value='';autoGrow();state.selectedDoc=null;setView('chat');renderHistory();renderMessages();
+ await persist();
+ const reply={id:id(),role:'assistant',text:'',at:time(),docName:doc?.text?doc.name:null,category:safeResult?.category||'modellantwort',sources:safeResult?.sources||null};
+ conv.messages.push(reply);
+ const output=renderMessage(reply);els.hero.style.display='none';
+ // Quellenbasierte Aussagen aus einem geprüften, in der App hinterlegten Offline-Auszug.
+ // Unbelegte und hochriskante Anfragen verlassen das Gerät nicht.
+ if(safeResult){reply.text=(note?note+'\n\n':'')+safeResult.text;reply.category=safeResult.category;
+  if(safeResult.sources)reply.sources=safeResult.sources;
+  renderSafeAnswer(output,reply.text);conv.updated=time();await persist();renderHistory();return;}
+ if(!state.engine){reply.text=(note?note+'\n\n':'')+'Das lokale KI-Modell ist nicht geladen. Öffne Einstellungen und lade ein geeignetes Modell. Ohne Modell und Quellen kann ich keine zuverlässige Antwort erzeugen.';
+  reply.category='nicht-verifiziert';renderSafeAnswer(output,reply.text);await persist();return;}
+ state.busy=true;els.send.disabled=true;
+ output.textContent='Die lokale KI formuliert eine Antwort. Wiederholungen werden geprüft; eine unabhängige Faktenprüfung ist nicht möglich …';
  try{
- const messages=[{role:'system',content:systemPrompt(mode,context)},...gatherMessages({...conv,messages:conv.messages.slice(0,-1)})];
- const chunks=await state.engine.chat.completions.create({messages,stream:true,temperature:0.15,max_tokens:1024});
- for await(const chunk of chunks){const delta=chunk.choices?.[0]?.delta?.content||'';if(delta){reply.text+=delta;output.textContent=reply.text;const root=document.querySelector('.main-content');root.scrollTop=root.scrollHeight;}}
- if(!reply.text.trim())reply.text='Dazu habe ich keine gesicherten Informationen. Das Modell hat keine verwertbare Antwort erzeugt.';
- if(state.tts)speak(reply.text);
- }catch(e){reply.text+='\n\n[Die lokale Antwort wurde unterbrochen: '+(e.message||'Unbekannter Modellfehler')+']';toast('Lokale Modellausführung fehlgeschlagen.');}
- finally{output.textContent=reply.text;conv.updated=time();try{await persist()}catch(e){toast('Konnte Antwort nicht speichern: '+e.message);}renderHistory();state.busy=false;els.send.disabled=false;els.input.focus();}
+  // Kleine Modelle profitieren von stark verkürztem Kontext und klaren Instruktionen.
+  const tiny=sizeRank(state.modelId)<=1.6;
+  const history=conv.messages.slice(0,-1).slice(tiny?-5:-9).map(m=>({role:m.role,content:String(m.text).slice(0,tiny?1100:2300)})).filter(m=>m.role==='user'||m.role==='assistant');
+  const messages=[{role:'system',content:tiny?simplePrompt(mode,context):systemPrompt(mode,context)},...history];
+  const chunks=await state.engine.chat.completions.create({messages,stream:true,temperature:0.08,top_p:0.8,repetition_penalty:1.13,frequency_penalty:0.35,max_tokens:tiny?330:520});
+  let raw='';
+  for await(const chunk of chunks){const delta=chunk.choices?.[0]?.delta?.content||'';if(delta)raw+=delta;}
+  const examined=reviewGeneratedAnswer(raw,{question,mode});
+  reply.text=(note?note+'\n\n':'')+examined.text;reply.category=examined.category;
+  if(state.tts)speak(reply.text);
+ }catch(e){reply.text=(note?note+'\n\n':'')+'Die lokale KI konnte die Anfrage nicht sicher bearbeiten. Fehlermeldung: '+(e.message||'Unbekannter Modellfehler');reply.category='nicht-verifiziert';toast('Lokale Modellausführung fehlgeschlagen.');}
+ finally{renderSafeAnswer(output,reply.text); // Quellenanzeige/Fußzeile nachträglich aktualisieren
+  const box=output.closest('.msg-body');const foot=box?.querySelector('.msg-foot .warning-label');
+  if(foot)foot.textContent=reply.category==='verworfen'?'Wiederholungsprüfung: Antwort verworfen':'KI-Antwort · Fakten nicht unabhängig geprüft';
+  conv.updated=time();try{await persist();}catch(e){toast('Konnte Antwort nicht speichern: '+e.message);}renderHistory();state.busy=false;els.send.disabled=false;els.input.focus();}
 }
 function speak(text){if(!('speechSynthesis'in window)){toast('Vorlesen wird nicht unterstützt.');return;}window.speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(text.slice(0,12000));utterance.lang='de-DE';utterance.rate=.98;window.speechSynthesis.speak(utterance);}
 async function localDictation(){const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -205,7 +253,7 @@ function setupListeners(){els.form.addEventListener('submit',unlock);
  $('settingsBack').addEventListener('click',()=>setView(state.previousView||'chat'));
  $('checkUpdates').addEventListener('click',checkForUpdates);
  $('installUpdate').addEventListener('click',installUpdate);
- els.model.addEventListener('change',async()=>{if(!state.data)return;state.data.settings.model=els.model.value;try{await persist();await updateStorageStatus();toast('Modell-Auswahl gespeichert. Zum Aktivieren „Modell auswählen & laden“ nutzen.');}catch(e){toast('Modell-Auswahl konnte nicht gespeichert werden: '+e.message)}});
+ els.model.addEventListener('change',async()=>{updateModelQuality();if(!state.data)return;state.data.settings.model=els.model.value;try{await persist();await updateStorageStatus();toast('Modell-Auswahl gespeichert. Zum Aktivieren „Modell auswählen & laden“ nutzen.');}catch(e){toast('Modell-Auswahl konnte nicht gespeichert werden: '+e.message)}});
  els.file.addEventListener('change',e=>{uploadFiles([...e.target.files]);e.target.value='';});const drop=$('dropzone');drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('drag')});drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('drag');uploadFiles([...e.dataTransfer.files])});drop.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();els.file.click();}});
  $('exportVault').addEventListener('click',doExport);$('importVault').addEventListener('change',doImport);$('deleteVault').addEventListener('click',doDelete);
  els.tts.addEventListener('change',async e=>{state.tts=e.target.checked;state.data.settings.tts=state.tts;await persist();});
