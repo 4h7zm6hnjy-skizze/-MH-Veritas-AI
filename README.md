@@ -1,4 +1,4 @@
-# MH Veritas AI – Version 0.2.0
+# MH Veritas AI – Version 0.2.1
 
 **Entwicklungsstand, keine zertifizierte Medizin-/Rechtssoftware.**
 
@@ -98,3 +98,17 @@ Dann http://localhost:8080 öffnen. Modell-Downloads brauchen Internet.
 3. Datenverbindung zu anderen Web-Apps mit expliziten Berechtigungen und bestätigter Einwilligung
 4. Wahlweise verifizierte, datenschutzgeprüfte Online-Recherche mit sichtbarer Quellenkette und Datum
 5. Fachliche Qualitätssicherung medizinischer/rechtlicher Abläufe; vor öffentlichen diagnostischen Funktionen regulatorische Prüfung
+
+
+## Änderungen in v0.2.1 (iPhone Navigation & Anzeige)
+
+- Menüleiste und Zurück-Button bleiben an der Oberkante der Web-App sichtbar und antippbar.
+- Die Seite selbst wird gegen versehentliches Verschieben gesperrt; der Inhaltsbereich scrollt weiterhin vertikal.
+- iPhone-Statusleiste auf nicht überlagerndes `black` umgestellt, da `black-translucent` in installierten iOS-Web-Apps zu Darstellungsproblemen führen kann.
+- Zoomsperre über Viewport, CSS und iOS-Gesten. Das kann die Zugänglichkeit beim Vergrößern einschränken.
+- Eingabefelder mobil auf mindestens 16px gestellt, damit der Fokus keinen Auto-Zoom auslöst.
+- Daten-Tresor, Chatverläufe, Modellcache und Exportfunktionen unverändert.
+
+Installation: Entpackte **Dateien** (nicht die ZIP) in den GitHub-Branch `main` hochladen und bestehende ersetzen. Danach in der App über Einstellungen → Nach Updates suchen → Update installieren aktualisieren. Im Zweifel die App schließen und neu öffnen. Vorher verschlüsseltes Backup exportieren.
+
+Hinweis: Echte iPhone-/iOS-Versionen können sich bei Safe-Area und Zoom verschieden verhalten. Eine Geräteprüfung ist notwendig.

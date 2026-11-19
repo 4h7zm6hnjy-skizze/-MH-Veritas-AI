@@ -2,7 +2,7 @@ import {createVault,openVault,saveVault,vaultExists,exportVault,importVault,eras
 import {systemPrompt,MODE_NAMES,emergencyNotice} from './rules.js';
 import {extractDocument,asDataUrl} from './parsers.js';
 
-const APP_VERSION='0.2.0';
+const APP_VERSION='0.2.1';
 const $=id=>document.getElementById(id);
 const state={key:null,salt:null,data:null,view:'chat',previousView:'chat',updateReady:false,remoteVersion:null,swRegistration:null,mode:'chat',activeId:null,selectedDoc:null,engine:null,modelId:'',modelLibrary:null,busy:false,sidebar:false,tts:false,recognition:null};
 const els={sidebar:$('sidebar'),screen:$('vaultScreen'),form:$('vaultForm'),pass:$('vaultPassword'),confirm:$('vaultConfirm'),passArea:$('confirmPassArea'),error:$('vaultError'),desc:$('vaultDescription'),submit:$('vaultSubmit'),messages:$('chatMessages'),hero:$('chatHero'),history:$('historyList'),input:$('messageInput'),composer:$('composerWrap'),send:$('sendButton'),file:$('filePicker'),docList:$('documentList'),docCount:$('docCount'),model:$('modelSelect'),engineBadge:$('engineBadge'),progress:$('modelProgress'),progressBar:$('progressBar'),chip:$('contextChip'),toast:$('toast'),tts:$('ttsToggle'),modelStorage:$('modelStorageStatus'),updateStatus:$('updateStatus'),updateButton:$('installUpdate')};
@@ -211,4 +211,11 @@ function setupListeners(){els.form.addEventListener('submit',unlock);
  els.tts.addEventListener('change',async e=>{state.tts=e.target.checked;state.data.settings.tts=state.tts;await persist();});
  const mic=createText('button','♩','attach-btn');mic.type='button';mic.title='Nur überprüft lokale Spracheingabe';mic.setAttribute('aria-label','Lokale Spracheingabe');mic.addEventListener('click',localDictation);els.input.before(mic);
 }
+// Zoomsperre: nur Mehrfinger-/Pinch-Zoom blockieren, vertikales Scrollen erhalten.
+for(const gesture of ['gesturestart','gesturechange']){
+ document.addEventListener(gesture,event=>event.preventDefault(),{passive:false});
+}
+document.addEventListener('touchmove',event=>{
+ if(event.touches.length>1)event.preventDefault();
+},{passive:false});
 start();

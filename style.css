@@ -18,3 +18,78 @@
 .update-actions button{min-height:50px;padding:10px 13px}
 .settings-btn{background:#23324e;color:var(--text);border:1px solid var(--line);border-radius:13px}
 @media(max-width:680px){.update-actions{grid-template-columns:1fr}.topbar-left{min-width:0;gap:8px}.back-nav{font-size:.83rem;padding:8px 10px}.back-nav span{display:none}.top-eyebrow{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
+
+
+/* v0.2.1 – iPhone-PWA: unverrückbarer Header, nur der Inhalt scrollt. */
+html, body {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+body {
+  position: fixed;
+  inset: 0;
+  touch-action: pan-y;
+  -webkit-text-size-adjust: 100%;
+}
+.app-shell {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  touch-action: pan-y;
+}
+.main-column {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+.topbar {
+  position: relative;
+  z-index: 8;
+  flex: 0 0 auto;
+  background: #0c1424;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+.main-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-x: none;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+.sidebar {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+button, a, label, select, textarea, input {
+  touch-action: manipulation;
+}
+/* iOS vergrößert Eingabefelder bei Fokus automatisch bei Schriftgrößen unter 16 px. */
+@media (max-width: 760px) {
+  .topbar {
+    height: 62px;
+    min-height: 62px;
+    padding: 0 12px;
+  }
+  .topbar-left { flex: 1 1 auto; min-width: 0; }
+  .topbar-left .top-eyebrow { flex: 1 1 auto; min-width: 0; }
+  .top-actions { flex: 0 0 auto; }
+  .status-badge { max-width: 145px; overflow: hidden; text-overflow: ellipsis; }
+  .main-content { padding: 0 16px 24px; }
+  input, textarea, select { font-size: 16px !important; }
+  #menuToggle, #viewBack, #lockButton { min-width: 42px; min-height: 44px; justify-content: center; }
+  .sidebar { z-index: 30; }
+  .mobile-shade.on { z-index: 25; }
+}

@@ -1,5 +1,5 @@
-const VERSION='mh-veritas-0.2.0';
-const SHELL=['./','./index.html','./style.css','./app.js','./vault.js','./rules.js','./parsers.js','./manifest.webmanifest','./version.json','./icon.svg','./icon-180.png','./icon-512.png','./verity-embed.js'];
+const VERSION='mh-veritas-0.2.1';
+const SHELL=['./','./index.html','./style.css?v=0.2.1','./app.js?v=0.2.1','./vault.js','./rules.js','./parsers.js','./manifest.webmanifest','./version.json','./icon.svg','./icon-180.png','./icon-512.png','./verity-embed.js'];
 self.addEventListener('install',event=>{event.waitUntil((async()=>{
  await (await caches.open(VERSION)).addAll(SHELL);
  // Einmalige Migration von v0.1.x: alte Version hatte noch keinen Update-Knopf.
