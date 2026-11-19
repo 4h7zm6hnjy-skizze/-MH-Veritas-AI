@@ -4,3 +4,17 @@
 @media(max-height:760px){.hero-mark{margin:8px auto 13px}.hero>p{margin-bottom:19px}.hero{padding-top:5px}.quick-grid button{min-height:68px}.hero h1{margin-bottom:10px}}
 
 [hidden]{display:none!important}
+
+/* v0.2.0: Navigation, Updates und persistentes Modell */
+.back-nav,.settings-back{border:1px solid var(--line);border-radius:12px;background:var(--panel2);color:var(--text);padding:9px 12px;min-height:36px;font-size:.88rem;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.back-nav.hidden{display:none!important}
+.back-nav:hover,.settings-back:hover{border-color:var(--accent)}
+.settings-back{margin-bottom:19px;font-size:.95rem;padding:10px 16px}
+.model-storage-status{font-size:.84rem;line-height:1.55;color:var(--muted);background:#0b1527;border:1px solid var(--line);border-radius:13px;padding:12px 14px}
+.update-stack{display:grid;gap:16px}
+.update-version{display:flex;justify-content:space-between;align-items:center;gap:15px;border:1px solid var(--line);border-radius:13px;padding:14px 16px;background:#0b1527}
+.update-version span{color:var(--accent);font-weight:700}
+.update-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.update-actions button{min-height:50px;padding:10px 13px}
+.settings-btn{background:#23324e;color:var(--text);border:1px solid var(--line);border-radius:13px}
+@media(max-width:680px){.update-actions{grid-template-columns:1fr}.topbar-left{min-width:0;gap:8px}.back-nav{font-size:.83rem;padding:8px 10px}.back-nav span{display:none}.top-eyebrow{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}

@@ -1,4 +1,35 @@
-# MH Veritas AI – Version 0.1.1
+# MH Veritas AI – Version 0.2.0
+
+**Entwicklungsstand, keine zertifizierte Medizin-/Rechtssoftware.**
+
+## Änderungen in v0.2.0
+
+- Zurück-Schaltfläche in Kopfzeile und Einstellungen.
+- Sichtbare Versionsnummer, „Nach Updates suchen“ und „Update installieren“ mit Service-Worker-Prüfung.
+- Das lokal gewählte KI-Modell wird im verschlüsselten Datentresor gespeichert und bei neuem Start automatisch wieder initialisiert.
+- WebLLM-Modellgewichte werden ausdrücklich in IndexedDB zwischengespeichert. Das Gerät muss die GPU bei jedem App-Neustart erneut initialisieren. Ggf. braucht die Bibliothek Internet; der Cache kann von iOS/Safari geleert werden.
+- Prüfung des Speicherstatus und optionaler Antrag auf dauerhaften Browserspeicher.
+
+## WICHTIG: GitHub-Upload
+
+Dieses Paket ist **flach** und speziell für deinen GitHub-iPhone-Upload erstellt: Alle Dateien direkt im **Repository-Hauptverzeichnis** hochladen; vorhandene Dateien ersetzen. **Keine ZIP-Datei selbst hochladen.**
+
+Im Repository auf GitHub Pages: main / (root) aktivieren.
+
+### Daten und Datenschutz
+
+Chats und Dokumente liegen lokal AES-GCM-verschlüsselt im Browser-Tresor. Das WebLLM-Modell ist öffentlich zugänglich und liegt unverschlüsselt in seinem Browsercache; keine privaten Informationen werden dort gespeichert. Das WebLLM-Skript und Modellgewichte kommen bei erstmaligem Laden von Drittservern. Es gibt keine unabhängige Faktenkontrolle. Verschlüsselte Backups regelmäßig exportieren. Keine medizinischen oder juristischen Entscheidungen auf KI-Ausgaben allein stützen.
+
+### Funktionstest auf dem iPhone
+
+1. ZIP entpackt hochladen und App aktualisieren.
+2. Tresor entsperren, Einstellungen öffnen, Modell auswählen und einmal vollständig laden.
+3. „Modellspeicher schützen & prüfen“ nutzen (Zustimmung kann durch iOS verweigert werden).
+4. App vollständig schließen und erneut öffnen; Tresor entsperren.
+5. Die App sollte die gespeicherte Auswahl automatisch aufrufen und das Modell wieder starten. Falls der Cache fehlt oder die KI-Bibliothek offline nicht lädt, erscheint eine konkrete Fehlermeldung.
+6. Im Einstellungsbereich „Nach Updates suchen“ testen; ohne neue Version wird „Kein neueres Update“ angezeigt.
+
+# MH Veritas AI – Version 0.1.0
 
 **Status: Entwicklungsstand / erste lokale, funktionale PWA.** Keine freigegebene medizinische Software, keine Rechtsberatung, kein Ersatz für medizinische Fachinformation. Keine Garantie für Richtigkeit generierter Antworten.
 
@@ -57,8 +88,8 @@ Dann http://localhost:8080 öffnen. Modell-Downloads brauchen Internet.
 - `vault.js`: lokaler Verschlüsselungstresor
 - `parsers.js`: lokale Dateiextraktion (Text / DOCX), keine externen PDF-Dienste
 - `rules.js`: Regeln für Wahrheit, Unsicherheit, Medizin und Recht
-- `sw.js`, `manifest.webmanifest`, `icon.svg`, `icon-180.png`, `icon-512.png`: PWA (GitHub-Upload ohne Unterordner)
-- `verity-embed.js`: Einbindung in andere Web-Apps (GitHub-Upload ohne Unterordner)
+- `sw.js`, `manifest.webmanifest`, `assets/`: PWA
+- `integration/verity-embed.js`: Einbindung in andere Web-Apps
 
 ## Nächste Entwicklungsstufen
 
@@ -67,20 +98,3 @@ Dann http://localhost:8080 öffnen. Modell-Downloads brauchen Internet.
 3. Datenverbindung zu anderen Web-Apps mit expliziten Berechtigungen und bestätigter Einwilligung
 4. Wahlweise verifizierte, datenschutzgeprüfte Online-Recherche mit sichtbarer Quellenkette und Datum
 5. Fachliche Qualitätssicherung medizinischer/rechtlicher Abläufe; vor öffentlichen diagnostischen Funktionen regulatorische Prüfung
-
-## GitHub Pages für dieses Repository
-
-1. Öffne https://github.com/4h7zm6hnjy-skizze/-MH-Veritas-AI/settings/pages
-2. Unter **Build and deployment**: **Deploy from a branch** wählen.
-3. Als Quelle **main** und **/(root)** wählen; danach speichern.
-4. Die erwartete Adresse nach erfolgreichem Deployment lautet:
-   https://4h7zm6hnjy-skizze.github.io/-MH-Veritas-AI/
-
-**Hinweis zur v0.1.1-Reparatur:** Da GitHub beim vorherigen iPhone-Upload die
-Ordnerstruktur nicht erhalten hat, sind die Bilddateien im Repo-Hauptverzeichnis.
-Deshalb referenziert diese Korrektur dieselben Bilddateien ohne `assets/`.
-Der Service Worker verwendet die tatsächlich vorhandenen Dateien, damit seine
-Initialinstallation nicht an fehlenden URLs scheitert.
-
-Dieses Repository ist öffentlich. Persönliche Unterlagen, Passwörter und private
-Backups niemals in GitHub hochladen.

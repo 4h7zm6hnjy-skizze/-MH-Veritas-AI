@@ -1,5 +1,21 @@
-const VERSION='mh-veritas-0.1.2';
-const SHELL=['./','./index.html','./style.css','./app.js','./vault.js','./rules.js','./parsers.js','./manifest.webmanifest','./icon.svg','./icon-180.png','./icon-512.png'];
-self.addEventListener('install',event=>{event.waitUntil(caches.open(VERSION).then(cache=>cache.addAll(SHELL)));self.skipWaiting();});
-self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('mh-veritas-')&&k!==VERSION).map(k=>caches.delete(k)))));self.clients.claim();});
-self.addEventListener('fetch',event=>{const req=event.request;if(req.method!=='GET'||new URL(req.url).origin!==self.location.origin)return;event.respondWith(caches.match(req).then(cached=>cached||fetch(req).then(res=>{if(res.ok&&['document','script','style','image','manifest'].includes(req.destination))caches.open(VERSION).then(c=>c.put(req,res.clone()));return res;}).catch(()=>req.mode==='navigate'?caches.match('./index.html'):Response.error())));});
+const VERSION='mh-veritas-0.2.0';
+const SHELL=['./','./index.html','./style.css','./app.js','./vault.js','./rules.js','./parsers.js','./manifest.webmanifest','./version.json','./icon.svg','./icon-180.png','./icon-512.png','./verity-embed.js'];
+self.addEventListener('install',event=>{event.waitUntil((async()=>{
+ await (await caches.open(VERSION)).addAll(SHELL);
+ // Einmalige Migration von v0.1.x: alte Version hatte noch keinen Update-Knopf.
+ // Nachfolgende Versionen werden dagegen erst nach Update-Bestätigung aktiviert.
+ const keys=await caches.keys();
+ if(keys.some(k=>k.startsWith('mh-veritas-0.1.')))await self.skipWaiting();
+})());});
+self.addEventListener('message',event=>{if(event.data?.type==='SKIP_WAITING')self.skipWaiting();});
+self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('mh-veritas-')&&k!==VERSION).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
+self.addEventListener('fetch',event=>{
+ const req=event.request,url=new URL(req.url);if(req.method!=='GET'||url.origin!==self.location.origin)return;
+ // Update-Version immer vom Server laden; kein veralteter Versionscheck aus dem Offline-Cache.
+ if(url.pathname.endsWith('/version.json'))return;
+ if(req.mode==='navigate'){
+  event.respondWith(fetch(req).then(async response=>{if(response.ok){const cache=await caches.open(VERSION);await cache.put('./index.html',response.clone());}return response;}).catch(()=>caches.match('./index.html')));
+  return;
+ }
+ event.respondWith(caches.match(req).then(cached=>cached||fetch(req).then(async response=>{if(response.ok&&['script','style','image','manifest'].includes(req.destination)){const cache=await caches.open(VERSION);await cache.put(req,response.clone());}return response;})));
+});
